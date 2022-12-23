@@ -100,3 +100,60 @@ def test_grade_assignment_draft_assignment(client, h_teacher_1):
     data = response.json
 
     assert data['error'] == 'FyleError'
+
+
+def test_grade_assignment_success_case(client, h_teacher_1):
+    """
+    success case: assignment is already graded
+    """
+    response = client.post(
+        '/teacher/assignments/grade',
+        headers=h_teacher_1
+        , json={
+            "id": 1,
+            "grade": "A"
+        }
+    )
+    assert response.status_code == 200
+    data = response.json['data']
+
+    assert data['teacher_id'] == 1
+    assert data['state'] == 'GRADED'
+    assert data['grade'] == 'A'
+
+
+def test_grade_assignment_regrade_error(client, h_teacher_1):
+    """
+    failure case: a submitted assignment is graded successfully
+    """
+    response = client.post(
+        '/teacher/assignments/grade',
+        headers=h_teacher_1
+        , json={
+            "id": 1,
+            "grade": "A"
+        }
+    )
+    assert response.status_code == 400
+    data = response.json
+
+    assert data['error'] == 'FyleError'
+
+
+def test_grade_assignment_not_a_teacher_error(client, h_student_1):
+    """
+    failure case: a student tries to grade himself
+    """
+
+    response = client.post(
+        '/teacher/assignments/grade',
+        headers=h_student_1
+        , json={
+            "id": 1,
+            "grade": "A"
+        }
+    )
+    assert response.status_code == 403
+    data = response.json
+
+    assert data['error'] == 'FyleError'
